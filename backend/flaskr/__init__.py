@@ -28,9 +28,9 @@ def create_app(test_config=None):
     # REUSABLE FUNCTIONS
     def get_categories():
         categories = Category.query.all()
-        return_categories = []
+        return_categories = {}
         for cat in categories:
-            return_categories.append(cat.type)
+            return_categories.update({cat.id: cat.type})
         return return_categories
 
     @app.route('/categories')
@@ -101,7 +101,7 @@ def create_app(test_config=None):
                 'success': True,
                 'questions': questions_found,
                 'total_questions': len(questions_found),
-                'current_category' : get_categories()[0]
+                'current_category' : get_categories()
             })
 
         question = body['question']

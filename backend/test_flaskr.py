@@ -41,7 +41,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(len(data['categories']) > 0)
-        self.assertIn('Science', data['categories'])
+        self.assertIn('Science', data['categories'].values())
 
     def test_get_all_questions(self):
         res = self.client().get('/questions?page=2')
