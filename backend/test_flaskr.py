@@ -75,6 +75,14 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'Question with id {} does not exist.'.format(1234323234))
 
+    def test_search_question(self):
+        res = self.client().post('/questions', json = { 'searchTerm' : 'long' })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(len(data['questions']) > 0)
+
     def test_create_question(self):
         new_question = {
             'question' : 'How long does it take to boil an egg?',
