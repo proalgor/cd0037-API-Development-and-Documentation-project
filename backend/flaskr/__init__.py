@@ -1,9 +1,12 @@
 from crypt import methods
+from email import message
 import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
+
+from sqlalchemy import func
 
 from models import setup_db, Question, Category
 
@@ -153,17 +156,29 @@ def create_app(test_config=None):
             'current_category' : category.type
         })
 
-    """
-    @TODO:
-    Create a POST endpoint to get questions to play the quiz.
-    This endpoint should take category and previous question parameters
-    and return a random questions within the given category,
-    if provided, and that is not one of the previous questions.
 
-    TEST: In the "Play" tab, after a user selects "All" or a category,
-    one question at a time is displayed, the user is allowed to answer
-    and shown whether they were correct or not.
-    """
+    @app.route('/quizzes', methods=['POST'])
+    def play_quiz():
+        req_body = request.get_json()
+
+        if not req_body:
+            # If no JSON Body was given, raise error.
+            abort(400, {'message': 'Invalid JSON in the Request'})
+            
+        previous_questions = req_body.get('previous_questions', None)
+
+        current_category = req_body.get('quiz_category', None)
+        
+        if current_category:
+            question = Question.query.filter(Question.category == str(current_category['id'])).filter(Question.id.notin_(previous_questions)).order_by(func.random()).first()
+        else:
+            # if no list with previous questions is given and also no category , just gut any question.
+            question = Question.query.filter(Question.id.notin_(previous_questions)).order_by(func.random()).first()
+        
+        return jsonify({
+            'success': True,
+            'question': question.format()
+        })
 
 
     def error_message(error, default_message):

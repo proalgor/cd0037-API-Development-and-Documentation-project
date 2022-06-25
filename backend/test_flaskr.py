@@ -129,6 +129,20 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 400)
         self.assertEqual(data['message'], 'Cateogry with ID {} has no question'.format(category_id))
 
+    def test_play_quiz_bad_request(self):
+        res = self.client().post('/quizzes')
+
+        self.assertEqual(res.status_code, 400)
+    
+    def test_play_quiz(self):
+        res = self.client().post('/quizzes', json={'previous_questions':[]}) 
+        data = json.loads(res.data)
+        
+        self.assertEqual(res.status_code, 200)
+        # question object has 5 keys
+        self.assertEqual(len(data['question']), 5)
+
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
