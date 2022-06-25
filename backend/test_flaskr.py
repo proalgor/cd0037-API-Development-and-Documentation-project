@@ -1,6 +1,7 @@
 import os
 import unittest
 import json
+from warnings import catch_warnings
 from flask_sqlalchemy import SQLAlchemy
 
 from flaskr import create_app
@@ -74,6 +75,51 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'Question with id {} does not exist.'.format(1234323234))
 
+    def test_create_question(self):
+        new_question = {
+            'question' : 'How long does it take to boil an egg?',
+            'answer' : '3min',
+            'category' : '1',
+            'difficulty' : 1
+        } 
+
+        res = self.client().post('/questions', json = new_question)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertTrue(data['question_id'] > 0)
+
+    def test_create_question_bad_request(self):
+        new_question = {
+            'question' : '',
+            'answer' : '3min',
+            'category' : '1',
+            'difficulty' : 1
+        } 
+
+        res = self.client().post('/questions', json = new_question)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['message'] , 'Question can not be blank') 
+
+    def test_get_category_questions(self):
+        category_id = 2
+        res = self.client().get('/categories/{}/questions'.format(category_id))
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['current_category'], str(category_id))
+
+    def test_get_category_questions(self):
+        category_id = 235
+        res = self.client().get('/categories/{}/questions'.format(category_id))
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data['message'], 'Cateogry with ID {} has no question'.format(category_id))
 
 
 # Make the tests conveniently executable

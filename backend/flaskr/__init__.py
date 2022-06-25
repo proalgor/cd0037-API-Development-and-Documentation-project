@@ -77,16 +77,46 @@ def create_app(test_config=None):
         except:
             abort(500)
 
-    """
-    @TODO:
-    Create an endpoint to POST a new question,
-    which will require the question and answer text,
-    category, and difficulty score.
+    @app.route('/questions', methods=['POST'])
+    def create_question():
+        body = request.get_json()
 
-    TEST: When you submit a question on the "Add" tab,
-    the form will clear and the question will appear at the end of the last page
-    of the questions list in the "List" tab.
-    """
+        if not body:
+            abort(400, {'message': 'request does not contain a JSON body'})
+
+        question = body['question']
+        answer = body['answer']
+        category = body['category']
+        difficulty = body['difficulty']
+
+        if not question:
+            abort(400, {'message': 'Question can not be blank'})
+
+        if not answer:
+            abort(400, {'message': 'Answer can not be blank'})
+
+        if not category:
+            abort(400, {'message': 'Category can not be blank'})
+
+        if not difficulty:
+            abort(400, {'message': 'Difficulty can not be blank'})
+        
+        try:
+            new_question = Question(
+                question = question, 
+                answer = answer, 
+                category= category,
+                difficulty = difficulty
+                )
+            new_question.insert()
+
+            return jsonify({
+                'success': True,
+                'question_id': new_question.id,
+            })
+
+        except:
+            abort(500)
 
     """
     @TODO:
@@ -99,14 +129,22 @@ def create_app(test_config=None):
     Try using the word "title" to start.
     """
 
-    """
-    @TODO:
-    Create a GET endpoint to get questions based on category.
+    @app.route('/categories/<int:cat_id>/questions')
+    def get_category_questions(cat_id):
+        cat_id_string = str(cat_id)
 
-    TEST: In the "List" tab / main screen, clicking on one of the
-    categories in the left column will cause only questions of that
-    category to be shown.
-    """
+        category = Category.query.get(cat_id)
+
+        questions = Question.query.filter(Question.category == cat_id_string).order_by(Question.id).all()
+        if not questions:
+            abort(400, {'message': 'Cateogry with ID {} has no question'.format(cat_id_string) })
+
+        return jsonify({
+            'success': True,
+            'questions': questions,
+            'total_questions': len(questions),
+            'current_category' : category.type
+        })
 
     """
     @TODO:
@@ -138,6 +176,14 @@ def create_app(test_config=None):
             "status": 404,
             "message": error_message(error, "resource not found")
         }), 404
+    
+    @app.errorhandler(400)
+    def invalid_request(error):
+        return jsonify({
+            "success": False, 
+            "status": 400,
+            "message": error_message(error, "Please verify your request parameters")
+        }), 400
 
     @app.errorhandler(500)
     def internal_error(error):
