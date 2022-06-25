@@ -1,3 +1,4 @@
+from crypt import methods
 import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -21,32 +22,44 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Headers', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
         return response
 
-    @app.route('/categories')
+    # REUSABLE FUNCTIONS
     def get_categories():
         categories = Category.query.all()
         return_categories = []
         for cat in categories:
             return_categories.append(cat.type)
-         
+        return return_categories
+
+    @app.route('/categories')
+    def get_all_categories():
         return jsonify({
             'success': True,
-            'categories': return_categories
+            'categories': get_categories()
         })
 
 
+    @app.route('/questions', methods=['GET'])
+    def get_questions():
+        page = request.args.get('page', 1, type=int)
+    
+        # Calculate start and end slicing
+        start =  (page - 1) * QUESTIONS_PER_PAGE
+        end = start + QUESTIONS_PER_PAGE
 
-    """
-    @TODO:
-    Create an endpoint to handle GET requests for questions,
-    including pagination (every 10 questions).
-    This endpoint should return a list of questions,
-    number of total questions, current category, categories.
+        # Format selection into list of dicts and slice
+        questions = [question.format() for question in Question.query.order_by(Question.id).all()]
+        current_questions = questions[start:end]
+        if len(current_questions) == 0:
+            abort(404)
 
-    TEST: At this point, when you start the application
-    you should see questions and categories generated,
-    ten questions per page and pagination at the bottom of the screen for three pages.
-    Clicking on the page numbers should update the questions.
-    """
+        return jsonify({
+            'success': True,
+            'questions': current_questions,
+            'total_questions': len(current_questions),
+            'categories' : get_categories(),
+            'current_category' : get_categories()
+        })
+
 
     """
     @TODO:
@@ -104,6 +117,20 @@ def create_app(test_config=None):
     Create error handlers for all expected errors
     including 404 and 422.
     """
+    def error_message(error, default_message):
+        try:
+            return error.description["message"]
+        except TypeError:
+            return default_message
+
+    @app.errorhandler(404)
+    def ressource_not_found(error):
+        print("404")
+        return jsonify({
+            "success": False, 
+            "status": 404,
+            "message": error_message(error, "resource not found")
+        }), 404
 
     return app
 
