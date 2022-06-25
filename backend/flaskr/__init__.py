@@ -143,17 +143,16 @@ def create_app(test_config=None):
     def get_category_questions(cat_id):
         cat_id_string = str(cat_id)
 
-        category = Category.query.get(cat_id)
-
         questions = Question.query.filter(Question.category == cat_id_string).order_by(Question.id).all()
+        formated_questions = [ q.format() for q in questions]
         if not questions:
             abort(400, {'message': 'Cateogry with ID {} has no question'.format(cat_id_string) })
 
         return jsonify({
             'success': True,
-            'questions': questions,
-            'total_questions': len(questions),
-            'current_category' : category.type
+            'questions': formated_questions,
+            'total_questions': len(formated_questions),
+            'current_category' : cat_id_string
         })
 
 
