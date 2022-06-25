@@ -61,13 +61,21 @@ def create_app(test_config=None):
         })
 
 
-    """
-    @TODO:
-    Create an endpoint to DELETE question using a question ID.
+    @app.route('/questions/<int:question_id>', methods=['DELETE'])
+    def delete_category(question_id):
+        question = Question.query.get(question_id)
+        if not question:
+            abort(404, {'message': 'Question with id {} does not exist.'.format(question_id)})
+        try:
+            question.delete()
 
-    TEST: When you click the trash icon next to a question, the question will be removed.
-    This removal will persist in the database and when you refresh the page.
-    """
+            return jsonify({
+                'success': True,
+                'message': 'Deleted question with id {} successfully'.format(question_id)
+            })
+
+        except:
+            abort(500)
 
     """
     @TODO:
@@ -125,7 +133,6 @@ def create_app(test_config=None):
 
     @app.errorhandler(404)
     def ressource_not_found(error):
-        print("404")
         return jsonify({
             "success": False, 
             "status": 404,
