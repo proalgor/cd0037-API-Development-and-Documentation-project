@@ -1,6 +1,7 @@
 from crypt import methods
 from email import message
 import os
+from unicodedata import category
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -167,11 +168,16 @@ def create_app(test_config=None):
         previous_questions = req_body.get('previous_questions', None)
 
         current_category = req_body.get('quiz_category', None)
+
+        if not previous_questions:
+            previous_questions = []
         
         if current_category:
-            question = Question.query.filter(Question.category == str(current_category['id'])).filter(Question.id.notin_(previous_questions)).order_by(func.random()).first()
+            if not Category.query.get(int(current_category['id'])):
+                question = Question.query.filter(Question.id.notin_(previous_questions)).order_by(func.random()).first() 
+            else:
+                question = Question.query.filter(Question.category == str(current_category['id'])).filter(Question.id.notin_(previous_questions)).order_by(func.random()).first()
         else:
-            # if no list with previous questions is given and also no category , just gut any question.
             question = Question.query.filter(Question.id.notin_(previous_questions)).order_by(func.random()).first()
         
         return jsonify({
@@ -204,6 +210,7 @@ def create_app(test_config=None):
 
     @app.errorhandler(500)
     def internal_error(error):
+        print(error)
         return jsonify({
             "success": False, 
             "status": 500,
