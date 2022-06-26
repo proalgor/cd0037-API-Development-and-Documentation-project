@@ -200,6 +200,14 @@ def create_app(test_config=None):
             "message": error_message(error, "resource not found")
         }), 404
     
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        return jsonify({
+            "success": False, 
+            "status": 405,
+            "message": error_message(error, "HTTP method is not allowed on this route")
+        }), 405
+    
     @app.errorhandler(400)
     def invalid_request(error):
         return jsonify({

@@ -43,6 +43,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(len(data['categories']) > 0)
         self.assertIn('Science', data['categories'].values())
 
+    def test_get_all_categories_method_not_allowed(self):
+        res = self.client().patch('/categories')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 405)
+        self.assertEqual(data['message'], 'HTTP method is not allowed on this route')
+
     def test_get_all_questions(self):
         res = self.client().get('/questions?page=2')
         data = json.loads(res.data)
@@ -82,6 +89,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(len(data['questions']) > 0)
+    
+    def test_search_question_failure(self):
+        res = self.client().post('/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data['message'], 'request does not contain a JSON body')
 
     def test_create_question(self):
         new_question = {
